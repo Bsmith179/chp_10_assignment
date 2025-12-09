@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    android:id="@+id/main"
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#B9EEF6">
 
 
     <androidx.constraintlayout.widget.Guideline
@@ -45,37 +45,24 @@
         android:contentDescription="@string/description"
         android:scaleType="fitCenter"
         app:layout_constraintBottom_toTopOf="@id/btStart"
-        app:layout_constraintStart_toStartOf="@id/guidelineLeft"
-        app:layout_constraintTop_toTopOf="@id/btStart"
-        app:layout_constraintWidth_percent="0.25"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintHeight_max="150dp"
-        />
+        app:layout_constraintStart_toStartOf="@id/guidelineLeft"
+        app:layout_constraintTop_toTopOf="@id/btStart"
+        app:layout_constraintWidth_percent="0.25" />
 
     <Button
         android:id="@+id/btStart"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
+        android:backgroundTint="#1A91ED"
         android:text="@string/btStart"
         android:textSize="25sp"
         app:layout_constraintBottom_toTopOf="@id/guidelineBottom"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/ivBird" />
-
-    <Button
-        android:id="@+id/btStop"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
-        android:text="@string/btStop"
-        android:textSize="25sp"
-        app:layout_constraintBottom_toTopOf="@id/guidelineBottom"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btStart"
-        app:layout_constraintVertical_chainStyle="spread" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

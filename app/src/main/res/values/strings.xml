@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">Lab 10 - Loading Animation</string>
     <string name="description">Bird Animation</string>
-    <string name="btStart">Start Loading</string>
-    <string name="btStop">Finish Loading</string>
+    <string name="btStart">Loading Failed. Retry?</string>
 </resources>

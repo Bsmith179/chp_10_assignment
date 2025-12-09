@@ -17,8 +17,6 @@ import androidx.core.view.WindowInsetsCompat;
 
 public class MainActivity extends AppCompatActivity {
     AnimationDrawable birdAnimation;
-    ImageView ivBird;
-    Button btStart, btStop;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,45 +26,75 @@ public class MainActivity extends AppCompatActivity {
 
         ImageView ivBird = findViewById(R.id.ivBird);
         Button btStart = findViewById(R.id.btStart);
-        Button btStop = findViewById(R.id.btStop);
 
         ivBird.setBackgroundResource(R.drawable.animation);
         birdAnimation = (AnimationDrawable) ivBird.getBackground();
 
-        final Animation startLoading = AnimationUtils.loadAnimation(this, R.anim.start_loading);
-        final Animation stopLoading = AnimationUtils.loadAnimation(this, R.anim.finish_loading);
-
+        final Animation floating = AnimationUtils.loadAnimation(this, R.anim.floating);
 
         btStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 birdAnimation.start();
 
-                // Find center and move the bird to stay there
+                // Find center and move the bird to pause there
                 int screenWidth = getResources().getDisplayMetrics().widthPixels;
                 float centerX = (float) screenWidth / 2 - ivBird.getWidth() / 2;
                 TranslateAnimation moveToCenter = new TranslateAnimation(
                         0, centerX,
                         0, 0
                 );
-                moveToCenter.setDuration(4000);
+                moveToCenter.setDuration(8000);
                 moveToCenter.setFillAfter(true);
 
                 // Create set
                 android.view.animation.AnimationSet animationSet = new android.view.animation.AnimationSet(false);
-                animationSet.addAnimation(startLoading);
+                animationSet.addAnimation(floating);
                 animationSet.addAnimation(moveToCenter);
 
                 //Start combined animations
                 ivBird.startAnimation(animationSet);
-            }
-        });
 
-        btStop.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ivBird.clearAnimation();
-                ivBird.startAnimation(stopLoading);
+                new android.os.Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        //Calculations post-pause
+                        int screenWidth = getResources().getDisplayMetrics().widthPixels;
+                        float initialLeftMargin = ivBird.getLeft();
+                        float finalXPosition = screenWidth - ivBird.getWidth() - initialLeftMargin;
+
+                        TranslateAnimation moveToRight = new TranslateAnimation(
+                                centerX, finalXPosition,
+                                0, 0
+                        );
+
+                        moveToRight.setDuration(5500);
+                        moveToRight.setFillAfter(true);
+
+                        //Create animation set for post-pause
+                        android.view.animation.AnimationSet animationSet2 = new android.view.animation.AnimationSet(false);
+                        animationSet2.addAnimation(floating);
+                        animationSet2.addAnimation(moveToRight);
+
+                        animationSet2.setAnimationListener(new Animation.AnimationListener() {
+                            @Override
+                            public void onAnimationStart(Animation animation) {
+                            }
+                            @Override
+                            public void onAnimationEnd(Animation animation) {
+                                ivBird.clearAnimation();  // Stop the animations
+                                birdAnimation.stop();
+                                birdAnimation.selectDrawable(0);
+                            }
+                            @Override
+                            public void onAnimationRepeat(Animation animation) {
+                            }
+                        });
+
+                        ivBird.startAnimation(animationSet2);
+                    }
+                }, 8700);
             }
         });
 
