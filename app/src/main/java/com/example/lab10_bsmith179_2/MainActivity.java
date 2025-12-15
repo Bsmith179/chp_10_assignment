@@ -1,107 +1,132 @@
+/**
+ * Brigitte Smith
+ * Lab 10 - Loading Animation Mockup
+ * On opening this app displays a stationary image and a button. Users will press the Retry button
+ * to start the loading animation, moving the now-flying bird to the other side of the screen,
+ * simulating the movement of a loading bar. Clicking the button a second time will restart the
+ * animation and play it again.
+ * 12/14/2025
+ */
+
+
 package com.example.lab10_bsmith179_2;
 
 import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
-import android.view.View;
+import android.util.DisplayMetrics;
+import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
+import android.view.animation.AnimationSet;
 import android.view.animation.TranslateAnimation;
 import android.widget.Button;
 import android.widget.ImageView;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams;
 
 public class MainActivity extends AppCompatActivity {
-    AnimationDrawable birdAnimation;
+
+    private ImageView ivBird;
+    private Button btStart;
+    private ConstraintLayout bottomContainer;
+    private AnimationDrawable birdAnimation;
+    private float startX, finalX;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-        ImageView ivBird = findViewById(R.id.ivBird);
-        Button btStart = findViewById(R.id.btStart);
+        ivBird = findViewById(R.id.ivBird);
+        btStart = findViewById(R.id.btStart);
+        bottomContainer = findViewById(R.id.bottomContainer);
 
+        // Keeps bird 150x150 dp
+        LayoutParams params = (LayoutParams) ivBird.getLayoutParams();
+        params.width = (int) dpToPx(150);
+        params.height = (int) dpToPx(150);
+        ivBird.setLayoutParams(params);
+
+        // Initialize wings flapping
         ivBird.setBackgroundResource(R.drawable.animation);
         birdAnimation = (AnimationDrawable) ivBird.getBackground();
 
-        final Animation floating = AnimationUtils.loadAnimation(this, R.anim.floating);
-
-        btStart.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                birdAnimation.start();
-
-                // Find center and move the bird to pause there
-                int screenWidth = getResources().getDisplayMetrics().widthPixels;
-                float centerX = (float) screenWidth / 2 - ivBird.getWidth() / 2;
-                TranslateAnimation moveToCenter = new TranslateAnimation(
-                        0, centerX,
-                        0, 0
-                );
-                moveToCenter.setDuration(8000);
-                moveToCenter.setFillAfter(true);
-
-                // Create set
-                android.view.animation.AnimationSet animationSet = new android.view.animation.AnimationSet(false);
-                animationSet.addAnimation(floating);
-                animationSet.addAnimation(moveToCenter);
-
-                //Start combined animations
-                ivBird.startAnimation(animationSet);
-
-                new android.os.Handler().postDelayed(new Runnable() {
+        // Calculate start and end positions
+        bottomContainer.getViewTreeObserver().addOnGlobalLayoutListener(
+                new ViewTreeObserver.OnGlobalLayoutListener() {
                     @Override
-                    public void run() {
-
-                        //Calculations post-pause
-                        int screenWidth = getResources().getDisplayMetrics().widthPixels;
-                        float initialLeftMargin = ivBird.getLeft();
-                        float finalXPosition = screenWidth - ivBird.getWidth() - initialLeftMargin;
-
-                        TranslateAnimation moveToRight = new TranslateAnimation(
-                                centerX, finalXPosition,
-                                0, 0
-                        );
-
-                        moveToRight.setDuration(5500);
-                        moveToRight.setFillAfter(true);
-
-                        //Create animation set for post-pause
-                        android.view.animation.AnimationSet animationSet2 = new android.view.animation.AnimationSet(false);
-                        animationSet2.addAnimation(floating);
-                        animationSet2.addAnimation(moveToRight);
-
-                        animationSet2.setAnimationListener(new Animation.AnimationListener() {
-                            @Override
-                            public void onAnimationStart(Animation animation) {
-                            }
-                            @Override
-                            public void onAnimationEnd(Animation animation) {
-                                ivBird.clearAnimation();  // Stop the animations
-                                birdAnimation.stop();
-                                birdAnimation.selectDrawable(0);
-                            }
-                            @Override
-                            public void onAnimationRepeat(Animation animation) {
-                            }
-                        });
-
-                        ivBird.startAnimation(animationSet2);
+                    public void onGlobalLayout() {
+                        bottomContainer.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        startX = ivBird.getX();
+                        finalX = bottomContainer.getWidth() - ivBird.getWidth() - dpToPx(16);
                     }
-                }, 8700);
-            }
+                });
+
+        // Recalculate on rotation
+        bottomContainer.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+            startX = ivBird.getX();
+            finalX = bottomContainer.getWidth() - ivBird.getWidth() - dpToPx(16);
         });
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
+        btStart.setOnClickListener(v -> startBirdAnimation());
+    }
+
+    private void startBirdAnimation() {
+        // Stop previous animations
+        ivBird.clearAnimation();
+        if (birdAnimation != null && birdAnimation.isRunning()) birdAnimation.stop();
+
+        // Reset bird position
+        ivBird.setX(startX);
+        ivBird.setTranslationY(0);
+
+        // Restart flapping
+        ivBird.setBackgroundResource(R.drawable.animation);
+        birdAnimation = (AnimationDrawable) ivBird.getBackground();
+        birdAnimation.start();
+
+        // Move right
+        float deltaX = finalX - startX;
+        TranslateAnimation moveRight = new TranslateAnimation(0, deltaX, 0, 0);
+        moveRight.setDuration(18000);
+        moveRight.setFillAfter(true);
+
+        // Floating
+        TranslateAnimation floating = new TranslateAnimation(0, 0, 0, -dpToPx(20));
+        floating.setDuration(800);
+        floating.setRepeatMode(Animation.REVERSE);
+        floating.setRepeatCount(Animation.INFINITE);
+        floating.setFillAfter(true);
+
+        // Create animation set
+        AnimationSet set = new AnimationSet(true);
+        set.addAnimation(moveRight);
+        set.addAnimation(floating);
+
+        moveRight.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) { }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                // Stop all animations and set final position
+                ivBird.clearAnimation();
+                if (birdAnimation.isRunning()) birdAnimation.stop();
+                ivBird.setX(finalX);
+                ivBird.setTranslationY(0);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) { }
         });
+
+        // Start full animation
+        ivBird.startAnimation(set);
+    }
+
+    private float dpToPx(float dp) {
+        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        return dp * metrics.density;
     }
 }
